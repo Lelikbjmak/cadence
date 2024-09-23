@@ -1,0 +1,17 @@
+package com.cadence.app.cadence.domain.enumeration;
+
+public enum ActivityType {
+  BSO,
+  BSO_COMPENSATION,
+  COMPANY_CHECK,
+  GOLDEN_RECORD_SEARCH,
+  EXTERNAL,
+  KASKO_STATUS_SG,
+  KBM,
+  PERSON_CHECK,
+  PRIMARY_RECORD_REGISTRATION,
+  PRIMARY_RECORD_CHANGE_STATUS,
+  LIMIT_UPDATE,
+  VEHICLE_CHECK,
+  TO_CHECK
+}

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.epam.edp</groupId>
+    <artifactId>lb-ms-parent</artifactId>
+    <version>4.1.0.48</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.cadence</groupId>
+  <artifactId>cadence</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>cadence</name>
+  <description>cadence</description>
+
+  <properties>
+    <java.version>8</java.version>
+    <lb-cadence-spring-boot-starter.version>0.1.0.28</lb-cadence-spring-boot-starter.version>
+    <spring-kafka.version>2.2.4.RELEASE</spring-kafka.version>
+    <lb-common-services.version>0.2.0.13</lb-common-services.version>
+    <lb-orchestrator-utils.version>4.0.2.14</lb-orchestrator-utils.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.epam.edp</groupId>
+      <artifactId>lb-cadence-spring-boot-starter</artifactId>
+      <version>${lb-cadence-spring-boot-starter.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.edp.common</groupId>
+      <artifactId>lb-activity-completion-kafka-supports</artifactId>
+      <version>${lb-common-services.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.edp.common</groupId>
+      <artifactId>lb-kafka</artifactId>
+      <version>${lb-common-services.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+      <version>${spring-kafka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.edp</groupId>
+      <artifactId>lb-orchestrator-utils</artifactId>
+      <version>${lb-orchestrator-utils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.7.4</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

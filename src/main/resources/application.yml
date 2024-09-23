@@ -1,0 +1,327 @@
+spring:
+  application:
+    name: cadence
+  mvc:
+    locale: ru_RU
+    locale-resolver: fixed
+  ## Database
+  liquibase.enabled: false
+  datasource:
+    url: jdbc:postgresql://${server-name}:${database-port}/${database-name}
+    username: ${database-user}
+    password: ${database-password}
+    driverClassName: org.postgresql.Driver
+    testOnBorrow: true
+    testWhileIdle: true
+    validationQuery: select 1
+    hikari:
+      maximumPoolSize: 10
+      minimumIdle: 1
+  jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+  kafka:
+    listener.concurrency: 5
+    bootstrap-servers: kafka:9092
+    consumer:
+      auto-offset-reset: latest
+      enable-auto-commit: true
+      group-id: osago-group
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer2
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer2
+      properties:
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.RoundRobinAssignor
+        spring.json.key.default.type: java.lang.String
+        spring.json.value.default.type: java.lang.String
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.json.trusted.packages: '*'
+        spring.json.use.type.headers: false
+    producer:
+      retries: 5
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: com.cadence.app.kafka.serializers.CustomDateSerializer
+      properties:
+        interceptor.classes: com.epam.edp.authorization.token.propagation.TokenWriterKafkaProducerInterceptor
+
+cadence:
+  service:
+    host: cadence-frontend
+    port: 7933
+  domain:
+    name: rsa_main_domain
+    description: Main domain
+    emitMetric: false
+    workflowExecutionRetentionPeriodInDays: 1
+  client:
+    domain-name: ${cadence.domain.name}
+  worker-factory:
+    domain-name: ${cadence.domain.name}
+    disableStickyExecution: true
+    cacheMaximumSize: 600
+    maxWorkflowThreadCount: 600
+    stickyDecisionScheduleToStartTimeoutInSeconds: 5
+    stickyWorkflowPollerOptions:
+      maximumPollRateIntervalMilliseconds: 1000
+      maximumPollRatePerSecond: 1000.0
+      pollBackoffCoefficient: 2.0D
+      pollThreadCount: 10
+      pollThreadNamePrefix: swp-
+  worker:
+    config:
+      default:
+        workerActivitiesPerSecond: 50.0
+        maxConcurrentActivityExecutionSize: 100
+        maxConcurrentWorkflowExecutionSize: 50
+        enableLoggingInReplay: false
+        activityPollerOptions:
+          maximumPollRateIntervalMilliseconds: 1000
+          maximumPollRatePerSecond: 1000.0
+          pollBackoffCoefficient: 2.0D
+          pollThreadCount: 10
+          pollThreadNamePrefix: ap-
+        workflowPollerOptions:
+          maximumPollRateIntervalMilliseconds: 1000
+          maximumPollRatePerSecond: 1000.0
+          pollBackoffCoefficient: 2.0D
+          pollThreadCount: 10
+          pollThreadNamePrefix: wp-
+        activity.bean-names:
+          - checkRequestActivityImpl
+      osago-create:
+        task-list: INSURANCE_CONTRACT_OSAGO
+        workflow.bean-names: osagoContractCreateWorkflowImpl
+  client-workflow-stub:
+    config:
+      default:
+        executionStartToCloseTimeout: PT2M
+        taskStartToCloseTimeout: PT59S
+      osagoContractCreateWorkflow:
+        task-list: INSURANCE_CONTRACT_OSAGO
+        executionStartToCloseTimeout: PT22M
+  global-activity-stub:
+    config:
+      default:
+        scheduleToStartTimeout: PT2M
+        startToCloseTimeout: PT10S
+      checkRequestActivity:
+        startToCloseTimeout: PT80S
+  local-activity-stub:
+    config:
+      default:
+        scheduleToCloseTimeout: PT50S
+  configuration:
+    interrupt:
+      localActivityTimeout: PT45S
+
+app:
+  cadence:
+    saga:
+      parallelCompensation: false
+      continueWithError: true
+  name: Service OSAGO
+  notifications:
+    date-formatter: dd.MM.yyyy
+    email:
+      concludeContractEmailTemplateName: current OSAGO
+      unavailableClosingMethods: # by default it should be empty, because email should be sent for every closingMethod
+      # you can specify closing methods as closingMethod codes list. Eg. 2, 3, 4
+    sms:
+      concludeContractSmsTemplateName: ePolis_contract
+      concludeAddendumSmsTemplateName: ePolis_addendum
+      unavailableClosingMethods: 1, 2, 3, 4
+  kafka:
+    externalConsumerGroup: osago-external-subject-check
+    referenceUpdateGroup: osago-reference-update-${pod-namespace}-${pod-name}
+    extendedContractValidationConsumerGroup: osago-extended-contract-validation
+    statusChangeSgConsumerGroup: osago-status-change-sg
+    topic:
+      status: osago_status
+      submit: osago_submit
+      osagoReq: osago_flk_req
+      newOsagoReq: new_osago_flk_req
+      osagoResp: osago_flk_resp
+      osagoContractReq: osago_contract_req
+      osagoContractResp: osago_contract_resp
+      mdmReferenceUpdateNotification: ${kafka.topic.rsa.mdm.reference.update.notification:rsa-mdm-reference_update_notification}
+      audit: ${kafka.topic.audit:audit}
+
+      personRegistrationRequest: ${kafka.topic.rsa.mdm.core.person.registration.request:rsa-mdm-Core-Person-registration_request}
+      personRegistrationResponse: ${kafka.topic.rsa.mdm.core.person.registration.response:rsa-mdm-Core-Person-registration_response}
+      organizationRegistrationRequest: ${kafka.topic.rsa.mdm.core.organization.registration.request:rsa-mdm-Core-Organization-registration_request}
+      organizationRegistrationResponse: ${kafka.topic.rsa.mdm.core.organization.registration.response:rsa-mdm-Core-Organization-registration_response}
+      vehicleRegistrationRequest: ${kafka.topic.rsa.mdm.core.vehicle.registration.request:rsa-mdm-Core-Vehicle-registration_request}
+      vehicleRegistrationResponse: ${kafka.topic.rsa.mdm.core.vehicle.registration.response:rsa-mdm-Core-Vehicle-registration_response}
+
+      personChangeStatusRequest: ${kafka.topic.rsa.mdm.core.person.status.change.request:rsa-mdm-Core-Person-status_change_request}
+      personChangeStatusResponse: ${kafka.topic.rsa.mdm.core.person.status.change.response:rsa-mdm-Core-Person-status_change_response}
+      organisationChangeStatusRequest: ${kafka.topic.rsa.mdm.core.organization.status.change.request:rsa-mdm-Core-Organization-status_change_request}
+      organisationChangeStatusResponse: ${kafka.topic.rsa.mdm.core.organization.status.change.response:rsa-mdm-Core-Organization-status_change_response}
+      vehicleChangeStatusRequest: ${kafka.topic.rsa.mdm.core.vehicle.status.change.request:rsa-mdm-Core-Vehicle-status_change_request}
+      vehicleChangeStatusResponse: ${kafka.topic.rsa.mdm.core.vehicle.status.change.response:rsa-mdm-Core-Vehicle-status_change_response}
+
+      personSearchRequest: ${kafka.topic.rsa.mdm.core.person.search.request:rsa-mdm-Core-Person-search_request}
+      personSearchResponse: ${kafka.topic.rsa.mdm.core.person.search.response:rsa-mdm-Core-Person-search_response}
+      organizationSearchRequest: ${kafka.topic.rsa.mdm.core.organization.search.request:rsa-mdm-Core-Organization-search_request}
+      organizationSearchResponse: ${kafka.topic.rsa.mdm.core.organization.search.response:rsa-mdm-Core-Organization-search_response}
+      vehicleSearchRequest: ${kafka.topic.rsa.mdm.core.vehicle.search.request:rsa-mdm-Core-Vehicle-search_request}
+      vehicleSearchResponse: ${kafka.topic.rsa.mdm.core.vehicle.search.response:rsa-mdm-Core-Vehicle-search_response}
+
+      toCheckRequest: ${kafka.topic.com.iv.transport.checkto.request:com.IV.Transport.TO.Request}
+      toCheckResponse: ${kafka.topic.com.iv.transport.checkto.response:com.IV.Transport.TO.Response}
+
+      checkCompanyOsagoRequest: ${kafka.topic.company.check.osago.request:company-check-osago_request}
+      checkCompanyOsagoResponse: ${kafka.topic.company.check.osago.response:company-check-osago_response}
+      checkPersonOsagoRequest: ${kafka.topic.person.check.osago.request:person-check-osago_request}
+      checkPersonOsagoResponse: ${kafka.topic.person.check.osago.response:person-check-osago_response}
+      checkVehicleOsagoRequest: ${kafka.topic.check-vehicle.osago.request:check-vehicle-osago_request}
+      checkVehicleOsagoResponse: ${kafka.topic.check-vehicle.osago.response:check-vehicle-osago_response}
+
+      checkCompanyExternalRequest: ${kafka.topic.company.check.external.request:company-external-check_request}
+      checkCompanyExternalResponse: ${kafka.topic.company.check.external.response:company-external-check_response}
+      checkPersonExternalRequest: ${kafka.topic.person.check.external.request:person-external-check_request}
+      checkPersonExternalResponse: ${kafka.topic.person.check.external.response:person-external-check_response}
+      checkVehicleExternalRequest: ${kafka.topic.vehicle-check.external.request:check-vehicle-external_request}
+      checkVehicleExternalResponse: ${kafka.topic.vehicle-check.external.response:check-vehicle-external_response}
+
+      externalSubjectObjectCheckRequest: ${kafka.topic.auto.osago.v1.contract.subjectobject.check.request:auto.osago.v1.contract.SubjectObject.check.request}
+      externalSubjectObjectCheckResponse: ${kafka.topic.auto.osago.v1.contract.subjectobject.check.response:auto.osago.v1.contract.SubjectObject.check.response}
+
+      publishBusinessResultTopic: ${kafka.topic.ms.osago.contract.change.event:ms-osago-contract-change-event}
+
+      bsoGeneralTopic: ${kafka.topic.com.osago.bso.request:com.OSAGO.BSO.Request}
+      bsoChangeStatusResponse: ${kafka.topic.com.osago.bso.changestatus.response:com.OSAGO.BSO.ChangeStatus.Response}
+      bsoCreateBsoResponse: ${kafka.topic.com.osago.bso.createbso.response:com.OSAGO.BSO.CreateBso.Response}
+      bsoRevokeStatusResponse: ${kafka.topic.com.osago.bso.revokestatus.response:com.OSAGO.BSO.RevokeStatus.Response}
+      bsoUpdateStatusDateResponse: ${kafka.topic.com.osago.bso.updatestatusdate.response:com.OSAGO.BSO.UpdateStatusDate.Response}
+
+      toCheckKbm: ${kafka.topic.com.il.osagocheck.request:com.IL.OsagoCheck.Request}
+      fromCheckKbm: ${kafka.topic.com.il.osagocheck.response:com.OSAGO.KBM.Check.Response}
+      toCalcKbm: ${kafka.topic.com.il.osagocalc.request:com.IL.OsagoCalc.Request}
+      fromCalcKbm: ${kafka.topic.com.il.osagocalc.response:com.OSAGO.KBM.Calc.Response}
+      toDIKbm: ${kafka.topic.com.kbm.tempservice.uc01.04.temp.request:com.Kbm.TempService.UC01-04_temp.Request}
+      fromDIKbm: ${kafka.topic.com.osago.dikbm.response:com.OSAGO.DiKBM.Response}
+
+      limitUpdateEventRequest: ${kafka.topic.etl.ms.osago.contract.ContractLimitHistory:etl.ms-osago-contract.ContractLimitHistory}
+      contextStatusHistory: ${kafka.topic.etl.ms.osago.ContextStatusHistory:etl.ms-osago.ContextStatusHistory}
+
+      osagoUpdateLimitRequest: ${kafka.topic.ms.osago.UpdateLimitRequest:ms-osago-update-limit-request}
+      osagoUpdateLimitResponse: ${kafka.topic.ms.osago.UpdateLimitResponse:ms-osago-update-limit-response}
+
+      extendedContractValidationRequest: ${kafka.topic.il.motor.contract.validate.request:il.motor.contract.validate.request}
+      extendedContractValidationResponse: ${kafka.topic.il.motor.contract.validate.response:il.motor.contract.validate.response}
+
+      changeStatusSGRequest: ${kafka.topic.il.contract.kasko.contract.status.request:il.contract.kasko.v1.contract.status.request}
+      changeStatusSGResponse: ${kafka.topic.il.contract.kasko.contract.status.response:il.contract.kasko.v1.contract.status.response}
+  audit:
+    eventDictionary:
+      12000001: Сохранение/изменение статуса договора/доп.соглашения в сервисе управления статусами
+      12000002: Изменение текущих значений лимитов
+      # Эвенты аудита для Егарант.
+      16: Отправка запроса в ЕАИС ТО
+      17: Получение ответа от ЕАИС ТО
+      28: Отправка в АИС ОСАГО запроса на расчет КБМ
+      29: Получение ответа из АИС ОСАГО на расчет КБМ
+      72: Отправка страхователю информации о заключении договора ОСАГО со страховщиком на адрес электронной почты
+  retry:
+    max-attempts: 5
+    delay: 1000
+    max-delay: 30000
+    multiplier: 1.3
+  mdm.modelName: osago
+  dateTimeFormat: yyyy-MM-dd'T'HH:mm:ssZ
+  feature:
+    primaryDrivingAreaByCountry:
+      beginDate: 2023-04-01
+      flkDocumentCheck: true
+    config:
+      limitEnabled: true
+      toRequestEnabled: true
+      companyCheckEnabled: true
+      personCheckEnabled: true
+      vehicleCheckEnabled: true
+      kbmEnabled: true
+      dikbmEnabled: true
+      tariffingEnabled: true
+      primaryRecordRegistrationEnabled: true
+      transdekraEnabled: true
+      insuranceContractEnabled: true
+      changePrimaryRecordStatusEnabled: true
+      registerStatusEnabled: true
+      bsoEnabled: true
+      fiasEnabled: true
+      compensationEnabled: true
+      osagoClaimEnabled: true
+      emailNotificationEnabled: true
+      smsNotificationEnabled: true
+      goldenRecordSearchEnabled: true
+      externalScenarioEnabled: true
+      exceptionalCasesApplyToContractEnabled: true
+      exceptionalCasesAPIEnabled: true
+      partitioningByContractIdEnabled: true
+      cancellationScheduleEnabled: true
+      compositeShrinkingEnabled: true
+      egarantInfoFinderEnabled: false
+      compensationStoreEnabled: true
+      extendedContractValidation: true
+      statusChangeSGRequestEnabled: true
+    shortPolicyWithSpecialConditionRegion:
+      beginDate: 2024-03-02
+  compensation.redis:
+    keyPrefix: ${pod-namespace:local}_${spring.application.name}_
+    timeToLiveSeconds: 43200
+
+status.model.service.enabled: true
+status.model.updateGraphVersion: true
+state.model.enable: false
+
+logging:
+  level:
+    ROOT: INFO
+    com.epam.edp.monitoring: ERROR
+    com.epam.edp.authorization: ERROR
+    org.springframework.kafka.KafkaListenerEndpointContainer: ERROR
+
+application:
+  name: ms-osago
+management:
+  endpoint:
+    metrics.enabled: true
+    prometheus.enabled: true
+  endpoints.web.exposure.include: '*'
+  metrics:
+    export.prometheus.enabled: true
+    distribution:
+      percentiles-histogram:
+        ms-osago_UC_02_01_01_request_time: false
+        ms-osago_UC_02_01_02_request_time: false
+        ms-osago_UC_02_01_03_request_time: false
+        ms-osago_UC_02_01_04_request_time: false
+        ms-osago_UC_02_01_05_request_time: false
+        ms-osago_UC_02_02_request_time: false
+        ms-osago_UC_02_03_request_time: false
+        ms-osago_UC_02_10_request_time: false
+        ms-osago_UC_02_12_request_time: false
+      percentiles:
+        ms-osago_UC_02_01_01_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_01_02_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_01_03_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_01_04_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_01_05_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_02_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_03_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_10_request_time: 0.5, 0.9, 0.95, 0.99
+        ms-osago_UC_02_12_request_time: 0.5, 0.9, 0.95, 0.99
+      sla:
+        ms-osago_UC_02_01_01_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_01_02_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_01_03_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_01_04_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_01_05_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_02_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_03_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_10_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+        ms-osago_UC_02_12_request_time: 100ms, 200ms, 500ms, 1s, 2s, 5s, 10s
+
+lib:
+  authorization:
+    token:
+      propagation.only: true
