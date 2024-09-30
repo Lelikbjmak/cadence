@@ -27,17 +27,17 @@ public class ActivityContextService {
 
   private final ActivityContextRepository contextRepository;
   private final ActivityCompletionClient completionClient;
-  private final MeterRegistry meterRegistry;
 
   public void putToken(UUID uuid, byte[] tokenId, LocalDateTime start, String activityName,
       ActivityType activityType) {
-    contextRepository.save(ActivityContextEntity.builder()
+    ActivityContextEntity entity = ActivityContextEntity.builder()
         .activityId(uuid.toString())
         .token(new String(tokenId, StandardCharsets.UTF_8))
         .start(start)
         .activityName(activityName)
         .activityType(activityType)
-        .build());
+        .build();
+    contextRepository.save(entity);
   }
 
   public <T> byte[] completeActivityContext(UUID uuid, T response) {

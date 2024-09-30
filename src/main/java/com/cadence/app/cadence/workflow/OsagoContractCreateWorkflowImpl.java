@@ -17,9 +17,9 @@ public class OsagoContractCreateWorkflowImpl implements OsagoContractWorkflow {
 
   private final TOCheckRequestActivityHandler toCheckRequestActivityHandler;
 
-  @NewChildSpan(spanName = "cadence_wrokflow")
+//  @NewChildSpan(spanName = "cadence_wrokflow")
   public String process(String s1) {
     String res = toCheckRequestActivityHandler.handle();
-    return "Workflow completed successfully with response" + res;
+    return "Workflow completed successfully with response";
   }
 }

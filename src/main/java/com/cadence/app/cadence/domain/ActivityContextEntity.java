@@ -27,7 +27,7 @@ public class ActivityContextEntity {
   @Column(nullable = false)
   private String activityId;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String token;
 
   @Column(nullable = false)

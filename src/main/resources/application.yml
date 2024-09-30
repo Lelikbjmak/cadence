@@ -17,6 +17,9 @@ spring:
     hikari:
       maximumPoolSize: 10
       minimumIdle: 1
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
   kafka:
     listener.concurrency: 5
@@ -94,7 +97,7 @@ cadence:
       default:
         executionStartToCloseTimeout: PT2M
         taskStartToCloseTimeout: PT59S
-      osagoContractCreateWorkflow:
+      osagoContractWorkflow:
         task-list: INSURANCE_CONTRACT_OSAGO
         executionStartToCloseTimeout: PT22M
   global-activity-stub:
