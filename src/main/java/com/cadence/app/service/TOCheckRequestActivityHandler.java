@@ -13,6 +13,7 @@ public class TOCheckRequestActivityHandler {
   private final CheckRequestActivity checkRequestActivity;
 
   public String handle() {
-    return checkRequestActivity.sendTOCheckRequest("Request").getResult();
+    String response = checkRequestActivity.sendTOCheckRequest("Request").getResult();
+    return response;
   }
 }

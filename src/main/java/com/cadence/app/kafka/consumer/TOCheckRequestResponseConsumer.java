@@ -15,7 +15,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -62,19 +62,13 @@ public class TOCheckRequestResponseConsumer {
     final String payload = (String) message.getPayload();
     final Map<String, Object> kafkaHeaders = message.getHeaders();
 
-    Thread.sleep(5000);
-
-    kafkaTemplate.send(new Message<Object>() {
-      @Override
-      public Object getPayload() {
-        return payload;
-      }
-
-      @Override
-      public MessageHeaders getHeaders() {
-        return new MessageHeaders(kafkaHeaders);
-      }
-    });
+    String correlationId = kafkaHeaders.get(KafkaHeaders.CORRELATION_ID).toString();
+    Message<String> mes = MessageBuilder
+        .withPayload(payload)
+        .setHeader(KafkaHeaders.CORRELATION_ID, correlationId)
+        .setHeader(KafkaHeaders.TOPIC, "com.IV.Transport.TO.Response")
+        .build();
+    kafkaTemplate.send(mes);
     log.debug("ToCheckRequest handled, response send to Kafka");
   }
 }

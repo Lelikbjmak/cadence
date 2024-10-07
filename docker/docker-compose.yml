@@ -1,7 +1,7 @@
 version: '3'
 services:
   postgres:
-    image: postgres:11.1-alpine
+    image: postgres:16
     ports:
       - "5432:5432"
     environment:
@@ -55,11 +55,14 @@ services:
     depends_on:
       - cassandra
       - statsd
-  cadence-web:
-    image: ubercadence/web:v3.23.2
-    environment:
-      - "CADENCE_TCHANNEL_PEERS=cadence:7933"
+  cadence-app:
+    image: cadence-app:latest
     ports:
-      - "8088:8088"
-    depends_on:
-      - cadence
+      - "8080:8080"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker,disableAuthorization"
+      - "server-name:postgres-1"
+      - "database-port=5432"
+      - "database-name=osago"
+      - "database-user=postgres"
+      - "database-password=postgres"

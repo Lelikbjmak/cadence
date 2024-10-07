@@ -7,7 +7,6 @@ import com.cadence.app.cadence.domain.enumeration.ActivityType;
 import com.cadence.app.cadence.repository.ActivityContextRepository;
 import com.uber.cadence.client.ActivityCompletionClient;
 import com.uber.cadence.client.ActivityNotExistsException;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;

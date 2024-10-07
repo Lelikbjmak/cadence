@@ -61,10 +61,7 @@ app:
 
 logging:
   level:
-    ROOT: ERROR
-    com.epam.edp: DEBUG
-    com.epam.edp.authorization: ERROR
-    com.epam.edp.monitoring: ERROR
+    com.cadence.app: DEBUG
 
 application:
   name: ms-osago

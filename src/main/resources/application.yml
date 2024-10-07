@@ -47,7 +47,7 @@ spring:
 
 cadence:
   service:
-    host: cadence-frontend
+    host: cadence
     port: 7933
   domain:
     name: rsa_main_domain
@@ -106,7 +106,7 @@ cadence:
         scheduleToStartTimeout: PT2M
         startToCloseTimeout: PT10S
       checkRequestActivity:
-        startToCloseTimeout: PT80S
+        startToCloseTimeout: PT20S
   local-activity-stub:
     config:
       default:

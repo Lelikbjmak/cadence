@@ -7,6 +7,7 @@ import com.cadence.app.cadence.dto.ActivityResponse;
 import com.epam.edp.spring.boot.cadence.worker.annotation.Activity;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.Message;
@@ -20,6 +21,7 @@ public class CheckRequestActivityImpl extends OsagoActivity implements CheckRequ
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Override
+  @SneakyThrows
   public ActivityResponse<String> sendTOCheckRequest(String s) {
 
     UUID uuid = generateAndSaveUUID(ActivityType.TO_CHECK);
@@ -28,6 +30,7 @@ public class CheckRequestActivityImpl extends OsagoActivity implements CheckRequ
         kafkaTopics.getToCheckResponse(), testPayload);
 
     kafkaTemplate.send(message);
+    Thread.sleep(10000);
     log.debug("Sent request for TO check. Topic {}", kafkaTopics.getToCheckRequest());
     com.uber.cadence.activity.Activity.doNotCompleteOnReturn();
     return ActivityResponse.<String>builder().build();
